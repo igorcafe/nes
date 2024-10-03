@@ -324,6 +324,28 @@ void cpu_init(cpu *cpu) {
   cpu->p = 0;
 }
 
+void stack_push(cpu *cpu, uint8_t b) {
+  cpu_write(0x0100 | cpu->s, b);
+  cpu->s--;
+}
+
+void stack_push16(cpu *cpu, uint16_t n) {
+  stack_push(cpu, n & 0xFF);
+  stack_push(cpu, n >> 8);
+}
+
+uint8_t stack_pop(cpu *cpu) {
+  cpu->s++;
+  return cpu_read(0x0100 | cpu->s);
+}
+
+uint16_t stack_pop16(cpu *cpu) {
+  uint16_t n = stack_pop(cpu);
+  n <<= 8;
+  n |= stack_pop(cpu);
+  return n;
+}
+
 void cpu_write_state(cpu *cpu, FILE* f) {
   char xxx[] = {'N', 'V', '-', 'B', 'D', 'I', 'Z', 'C', '\0'};
   for (int i = 0; i < 8; i++) {
@@ -634,10 +656,7 @@ void cpu_exec(cpu *cpu) {
     break;
 
   case I_JSR:
-    cpu_write(0x0100 | cpu->s, cpu->pc & 0xFF);
-    cpu->s--;
-    cpu_write(0x0100 | cpu->s, cpu->pc >> 8);
-    cpu->s--;
+    stack_push16(cpu, cpu->pc);
     break;
 
   case I_LDA:
@@ -673,23 +692,19 @@ void cpu_exec(cpu *cpu) {
     break;
 
   case I_PHA:
-    cpu_write(0x0100 | cpu->s, cpu->a);
-    cpu->s--;
+    stack_push(cpu, cpu->a);
     break;
 
   case I_PHP:
-    cpu_write(0x0100 | cpu->s, cpu->p);
-    cpu->s--;
+    stack_push(cpu, cpu->p);
     break;
 
   case I_PLA:
-    cpu->s--;
-    cpu->a = cpu_read(0x0100 | cpu->s);
+    cpu->a = stack_pop(cpu);
     break;
 
   case I_PLP:
-    cpu->s--;
-    cpu->p = cpu_read(0x0100 | cpu->s);
+    cpu->p = stack_pop(cpu);
     break;
 
   case I_ROR:
@@ -699,21 +714,12 @@ void cpu_exec(cpu *cpu) {
     break;
 
   case I_RTI:
-    cpu->s--;
-    cpu->p = cpu_read(0x0100 | cpu->s);
-    cpu->s--;
-    cpu->pc = cpu_read(0x0100 | cpu->s);
-    cpu->pc <<= 8;
-    cpu->s--;
-    cpu->pc |= cpu_read(0x0100 | cpu->s);
+    cpu->p = stack_pop(cpu);
+    cpu->pc = stack_pop16(cpu);
     break;
 
   case I_RTS:
-    cpu->s--;
-    cpu->pc = cpu_read(0x0100 | cpu->s);
-    cpu->pc <<= 8;
-    cpu->s--;
-    cpu->pc |= cpu_read(0x0100 | cpu->s);
+    cpu->pc = stack_pop16(cpu);
     break;
 
   case I_SBC:
