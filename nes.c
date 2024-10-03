@@ -3,9 +3,10 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <assert.h>
+#include <string.h>
 
-#define TODO \
-  fprintf(stderr, "TODO! %s - %s:%d\n", __func__, __FILE__, __LINE__); \
+#define TODO                                                            \
+  fprintf(stderr, "TODO! %s - %s:%d\n", __func__, __FILE__, __LINE__);  \
   exit(-1);
 
 enum flag {
@@ -38,454 +39,21 @@ uint8_t ram[0x0800];
 
 void cpu_write(uint16_t addr, uint8_t b) {
   if (addr < 0x2000) {
-	ram[addr & 0x07FF] = b;
+    ram[addr & 0x07FF] = b;
+    return;
   }
-  TODO
+  TODO;
 }
 
 uint8_t cpu_read(uint16_t addr) {
   if (addr < 0x2000) {
-	return ram[addr & 0x07FF];
+    return ram[addr & 0x07FF];
   }
-  TODO
+  TODO;
 }
 
-typedef enum opcode {
-/* ADC */
-/* Add Memory to Accumulator with Carry */
-
-/* A + M + C -> A, C */
-/* N	Z	C	I	D	V */
-/* +	+	+	-	-	+ */
-/* addressing	assembler	opc	bytes	cycles */
-/* immediate	ADC #oper	69	2	2   */
-/* zeropage	ADC oper	65	2	3   */
-/* zeropage,X	ADC oper,X	75	2	4   */
-/* absolute	ADC oper	6D	3	4   */
-/* absolute,X	ADC oper,X	7D	3	4*  */
-/* absolute,Y	ADC oper,Y	79	3	4*  */
-/* (indirect,X)	ADC (oper,X)	61	2	6   */
-/* (indirect),Y	ADC (oper),Y	71	2	5*  */
-/* AND */
-/* AND Memory with Accumulator */
-
-/* A AND M -> A */
-/* N	Z	C	I	D	V */
-/* +	+	-	-	-	- */
-/* addressing	assembler	opc	bytes	cycles */
-/* immediate	AND #oper	29	2	2   */
-/* zeropage	AND oper	25	2	3   */
-/* zeropage,X	AND oper,X	35	2	4   */
-/* absolute	AND oper	2D	3	4   */
-/* absolute,X	AND oper,X	3D	3	4*  */
-/* absolute,Y	AND oper,Y	39	3	4*  */
-/* (indirect,X)	AND (oper,X)	21	2	6   */
-/* (indirect),Y	AND (oper),Y	31	2	5*  */
-/* ASL */
-/* Shift Left One Bit (Memory or Accumulator) */
-
-/* C <- [76543210] <- 0 */
-/* N	Z	C	I	D	V */
-/* +	+	+	-	-	- */
-/* addressing	assembler	opc	bytes	cycles */
-/* accumulator	ASL A	0A	1	2   */
-/* zeropage	ASL oper	06	2	5   */
-/* zeropage,X	ASL oper,X	16	2	6   */
-/* absolute	ASL oper	0E	3	6   */
-/* absolute,X	ASL oper,X	1E	3	7   */
-/* BCC */
-/* Branch on Carry Clear */
-
-/* branch on C = 0 */
-/* N	Z	C	I	D	V */
-/* -	-	-	-	-	- */
-/* addressing	assembler	opc	bytes	cycles */
-/* relative	BCC oper	90	2	2** */
-/* BCS */
-/* Branch on Carry Set */
-
-/* branch on C = 1 */
-/* N	Z	C	I	D	V */
-/* -	-	-	-	-	- */
-/* addressing	assembler	opc	bytes	cycles */
-/* relative	BCS oper	B0	2	2** */
-/* BEQ */
-/* Branch on Result Zero */
-
-/* branch on Z = 1 */
-/* N	Z	C	I	D	V */
-/* -	-	-	-	-	- */
-/* addressing	assembler	opc	bytes	cycles */
-/* relative	BEQ oper	F0	2	2** */
-/* BIT */
-/* Test Bits in Memory with Accumulator */
-
-/* bits 7 and 6 of operand are transfered to bit 7 and 6 of SR (N,V); */
-/* the zero-flag is set according to the result of the operand AND */
-/* the accumulator (set, if the result is zero, unset otherwise). */
-/* This allows a quick check of a few bits at once without affecting */
-/* any of the registers, other than the status register (SR). */
-
-/* A AND M -> Z, M7 -> N, M6 -> V */
-/* N	Z	C	I	D	V */
-/* M7	+	-	-	-	M6 */
-/* addressing	assembler	opc	bytes	cycles */
-/* zeropage	BIT oper	24	2	3   */
-/* absolute	BIT oper	2C	3	4   */
-/* BMI */
-/* Branch on Result Minus */
-
-/* branch on N = 1 */
-/* N	Z	C	I	D	V */
-/* -	-	-	-	-	- */
-/* addressing	assembler	opc	bytes	cycles */
-/* relative	BMI oper	30	2	2** */
-/* BNE */
-/* Branch on Result not Zero */
-
-/* branch on Z = 0 */
-/* N	Z	C	I	D	V */
-/* -	-	-	-	-	- */
-/* addressing	assembler	opc	bytes	cycles */
-/* relative	BNE oper	D0	2	2** */
-/* BPL */
-/* Branch on Result Plus */
-
-/* branch on N = 0 */
-/* N	Z	C	I	D	V */
-/* -	-	-	-	-	- */
-/* addressing	assembler	opc	bytes	cycles */
-/* relative	BPL oper	10	2	2** */
-/* BRK */
-/* Force Break */
-
-/* BRK initiates a software interrupt similar to a hardware */
-/* interrupt (IRQ). The return address pushed to the stack is */
-/* PC+2, providing an extra byte of spacing for a break mark */
-/* (identifying a reason for the break.) */
-/* The status register will be pushed to the stack with the break */
-/* flag set to 1. However, when retrieved during RTI or by a PLP */
-/* instruction, the break flag will be ignored. */
-/* The interrupt disable flag is not set automatically. */
-
-/* interrupt, */
-/* push PC+2, push SR */
-/* N	Z	C	I	D	V */
-/* -	-	-	1	-	- */
-/* addressing	assembler	opc	bytes	cycles */
-/* implied	BRK	00	1	7   */
-/* BVC */
-/* Branch on Overflow Clear */
-
-/* branch on V = 0 */
-/* N	Z	C	I	D	V */
-/* -	-	-	-	-	- */
-/* addressing	assembler	opc	bytes	cycles */
-/* relative	BVC oper	50	2	2** */
-/* BVS */
-/* Branch on Overflow Set */
-
-/* branch on V = 1 */
-/* N	Z	C	I	D	V */
-/* -	-	-	-	-	- */
-/* addressing	assembler	opc	bytes	cycles */
-/* relative	BVS oper	70	2	2** */
-/* CLC */
-/* Clear Carry Flag */
-
-/* 0 -> C */
-/* N	Z	C	I	D	V */
-/* -	-	0	-	-	- */
-/* addressing	assembler	opc	bytes	cycles */
-/* implied	CLC	18	1	2   */
-/* CLD */
-/* Clear Decimal Mode */
-
-/* 0 -> D */
-/* N	Z	C	I	D	V */
-/* -	-	-	-	0	- */
-/* addressing	assembler	opc	bytes	cycles */
-/* implied	CLD	D8	1	2   */
-/* CLI */
-/* Clear Interrupt Disable Bit */
-
-/* 0 -> I */
-/* N	Z	C	I	D	V */
-/* -	-	-	0	-	- */
-/* addressing	assembler	opc	bytes	cycles */
-/* implied	CLI	58	1	2   */
-/* CLV */
-/* Clear Overflow Flag */
-
-/* 0 -> V */
-/* N	Z	C	I	D	V */
-/* -	-	-	-	-	0 */
-/* addressing	assembler	opc	bytes	cycles */
-/* implied	CLV	B8	1	2   */
-/* CMP */
-/* Compare Memory with Accumulator */
-
-/* A - M */
-/* N	Z	C	I	D	V */
-/* +	+	+	-	-	- */
-/* addressing	assembler	opc	bytes	cycles */
-/* immediate	CMP #oper	C9	2	2   */
-/* zeropage	CMP oper	C5	2	3   */
-/* zeropage,X	CMP oper,X	D5	2	4   */
-/* absolute	CMP oper	CD	3	4   */
-/* absolute,X	CMP oper,X	DD	3	4*  */
-/* absolute,Y	CMP oper,Y	D9	3	4*  */
-/* (indirect,X)	CMP (oper,X)	C1	2	6   */
-/* (indirect),Y	CMP (oper),Y	D1	2	5*  */
-
-  // CPX (compare memory and X)
-  CPX_IMM = 0xE0,
-  CPX_ZPG = 0xE4,
-  CPX_ABS = 0xEC,
-
-  // CPY (compare memory and Y) - NZC
-  CPY_IMM = 0xC0,
-  CPY_ZPG = 0xC4,
-  CPY_ABS = 0xCC,
-
-  // DEC (decrement memory)
-  DEC_ZPG = 0xC6,
-  DEC_ZPX = 0xD6,
-  DEC_ABS = 0xCE,
-  DEC_ABX = 0xDE,
-
-  // DEX (decrement X)
-  DEX_IMP = 0xCA,
-
-  // DEY (decrement Y)
-  DEY_IMP = 0x88,
-
-
-/* Y - 1 -> Y */
-/* N	Z	C	I	D	V */
-/* +	+	-	-	-	- */
-/* addressing	assembler	opc	bytes	cycles */
-/* implied	DEY	88	1	2   */
-/* EOR */
-/* Exclusive-OR Memory with Accumulator */
-
-/* A EOR M -> A */
-/* N	Z	C	I	D	V */
-/* +	+	-	-	-	- */
-/* addressing	assembler	opc	bytes	cycles */
-/* immediate	EOR #oper	49	2	2   */
-/* zeropage	EOR oper	45	2	3   */
-/* zeropage,X	EOR oper,X	55	2	4   */
-/* absolute	EOR oper	4D	3	4   */
-/* absolute,X	EOR oper,X	5D	3	4*  */
-/* absolute,Y	EOR oper,Y	59	3	4*  */
-/* (indirect,X)	EOR (oper,X)	41	2	6   */
-/* (indirect),Y	EOR (oper),Y	51	2	5*  */
-
-  // INC (increment memory)
-  INC_ZPG = 0xE6,
-  INC_ZPX = 0xF6,
-  INC_ABS = 0xEE,
-  INC_ABX = 0xFE,
-
-  // INX (increment X)
-  INX_IMP = 0xE8,
-
-  // INY (increment Y)
-  INY_IMP = 0xC8,
-
-  // JMP
-  JMP_ABS = 0x4C,
-  JMP_IND = 0x6C,
-
-  // JSR
-  JSR_ABS = 0x20,
-
-  // LDA - NZ
-  LDA_IMM = 0xA9,
-  LDA_ZPG = 0xA5,
-  LDA_ZPX = 0xB5,
-  LDA_ABS = 0xAD,
-  LDA_ABX = 0xBD,
-  LDA_ABY = 0xB9,
-  LDA_INX = 0xA1,
-  LDA_INY = 0xB1,
-
-  // LDX - NZ
-  LDA_IMM = 0xA2,
-  LDA_ZPG = 0xA6,
-  LDA_ZPY = 0xB6,
-  LDA_ABS = 0xAE,
-  LDA_ABY = 0xBE,
-
-/* LDY */
-/* Load Index Y with Memory */
-
-/* M -> Y */
-/* N	Z	C	I	D	V */
-/* +	+	-	-	-	- */
-/* addressing	assembler	opc	bytes	cycles */
-/* immediate	LDY #oper	A0	2	2   */
-/* zeropage	LDY oper	A4	2	3   */
-/* zeropage,X	LDY oper,X	B4	2	4   */
-/* absolute	LDY oper	AC	3	4   */
-/* absolute,X	LDY oper,X	BC	3	4*  */
-/* LSR */
-/* Shift One Bit Right (Memory or Accumulator) */
-
-/* 0 -> [76543210] -> C */
-/* N	Z	C	I	D	V */
-/* 0	+	+	-	-	- */
-/* addressing	assembler	opc	bytes	cycles */
-/* accumulator	LSR A	4A	1	2   */
-/* zeropage	LSR oper	46	2	5   */
-/* zeropage,X	LSR oper,X	56	2	6   */
-/* absolute	LSR oper	4E	3	6   */
-/* absolute,X	LSR oper,X	5E	3	7   */
-
-  NOP_IMP = 0xEA,
-
-/* ORA */
-/* OR Memory with Accumulator */
-
-/* A OR M -> A */
-/* N	Z	C	I	D	V */
-/* +	+	-	-	-	- */
-/* addressing	assembler	opc	bytes	cycles */
-/* immediate	ORA #oper	09	2	2   */
-/* zeropage	ORA oper	05	2	3   */
-/* zeropage,X	ORA oper,X	15	2	4   */
-/* absolute	ORA oper	0D	3	4   */
-/* absolute,X	ORA oper,X	1D	3	4*  */
-/* absolute,Y	ORA oper,Y	19	3	4*  */
-/* (indirect,X)	ORA (oper,X)	01	2	6   */
-/* (indirect),Y	ORA (oper),Y	11	2	5*  */
-
-  // push A register to stack
-  PHA_IMP = 0x48,
-
-  // push P register to stack
-  PHP_IMP = 0x08,
-
-  // pull A register from stack
-  PLA_IMP = 0x68,
-
-  // pull P register from stack, woah
-  PLP_IMP = 0x28,
-
-/* ROL */
-/* Rotate One Bit Left (Memory or Accumulator) */
-
-/* C <- [76543210] <- C */
-/* N	Z	C	I	D	V */
-/* +	+	+	-	-	- */
-/* addressing	assembler	opc	bytes	cycles */
-/* accumulator	ROL A	2A	1	2   */
-/* zeropage	ROL oper	26	2	5   */
-/* zeropage,X	ROL oper,X	36	2	6   */
-/* absolute	ROL oper	2E	3	6   */
-/* absolute,X	ROL oper,X	3E	3	7   */
-/* ROR */
-/* Rotate One Bit Right (Memory or Accumulator) */
-
-/* C -> [76543210] -> C */
-/* N	Z	C	I	D	V */
-/* +	+	+	-	-	- */
-/* addressing	assembler	opc	bytes	cycles */
-/* accumulator	ROR A	6A	1	2   */
-/* zeropage	ROR oper	66	2	5   */
-/* zeropage,X	ROR oper,X	76	2	6   */
-/* absolute	ROR oper	6E	3	6   */
-/* absolute,X	ROR oper,X	7E	3	7   */
-
-  // Return from interrupt
-  RTI_IMP = 0x40,
-
-  // Return from subroutine
-  RTS_IMP = 0x60,
-
-/* SBC */
-/* Subtract Memory from Accumulator with Borrow */
-
-/* A - M - C̅ -> A */
-/* N	Z	C	I	D	V */
-/* +	+	+	-	-	+ */
-/* addressing	assembler	opc	bytes	cycles */
-/* immediate	SBC #oper	E9	2	2   */
-/* zeropage	SBC oper	E5	2	3   */
-/* zeropage,X	SBC oper,X	F5	2	4   */
-/* absolute	SBC oper	ED	3	4   */
-/* absolute,X	SBC oper,X	FD	3	4*  */
-/* absolute,Y	SBC oper,Y	F9	3	4*  */
-/* (indirect,X)	SBC (oper,X)	E1	2	6   */
-/* (indirect),Y	SBC (oper),Y	F1	2	5*  */
-
-  // Set carry flag
-  SEC_IMP = 0x38,
-
-  // Set decimal flag
-  SED_IMP = 0xF8,
-
-  // Set interrupt disable
-  SEI_IMP = 0x78,
-
-/* STA */
-/* Store Accumulator in Memory */
-
-/* A -> M */
-/* N	Z	C	I	D	V */
-/* -	-	-	-	-	- */
-/* addressing	assembler	opc	bytes	cycles */
-/* zeropage	STA oper	85	2	3   */
-/* zeropage,X	STA oper,X	95	2	4   */
-/* absolute	STA oper	8D	3	4   */
-/* absolute,X	STA oper,X	9D	3	5   */
-/* absolute,Y	STA oper,Y	99	3	5   */
-/* (indirect,X)	STA (oper,X)	81	2	6   */
-/* (indirect),Y	STA (oper),Y	91	2	6   */
-
-/* STX */
-/* Store Index X in Memory */
-
-/* X -> M */
-/* N	Z	C	I	D	V */
-/* -	-	-	-	-	- */
-/* addressing	assembler	opc	bytes	cycles */
-/* zeropage	STX oper	86	2	3   */
-/* zeropage,Y	STX oper,Y	96	2	4   */
-/* absolute	STX oper	8E	3	4   */
-
-/* STY */
-/* Sore Index Y in Memory */
-
-/* Y -> M */
-/* N	Z	C	I	D	V */
-/* -	-	-	-	-	- */
-/* addressing	assembler	opc	bytes	cycles */
-/* zeropage	STY oper	84	2	3   */
-/* zeropage,X	STY oper,X	94	2	4   */
-/* absolute	STY oper	8C	3	4   */
-
-  // TAX (transfer A to X)
-  TAX_IMP = 0xAA,
-
-  // TAY (transfer A to Y)
-  TAY_IMP = 0xA8,
-
-  // TSX (transfer S to X)
-  TSX_IMP = 0xBA,
-
-  // TXA (transfer X to Y)
-  TXA_IMP = 0x8A,
-
-  // TXS (transfer X to S)
-  TXS_IMP = 0x9A,
-
-  // TYA (transfer Y to A)
-  TYA_IMP = 0x98,
-} opcode;
-
-typedef enum AM {
+typedef enum addr_mode_t {
+  AM_ACC,
   AM_ABS,
   AM_ABX,
   AM_ABY,
@@ -499,54 +67,172 @@ typedef enum AM {
   AM_ZPX,
   AM_ZPY,
   AM_LEN,
-} AM;
+} addr_mode_t;
+
+typedef enum instruction_t {
+  I_LDA,
+} instruction_t;
 
 
 typedef struct instruction {
   char *fmt;
-  AM am;
+  addr_mode_t addr_mode;
 } instruction;
 
-instruction instruction[256] = {
-  [0x00] = {"BRK", AM_IMP},
-  [0x01] = {"ORA ($%02X, X)", AM_INX},
-  [0x05] = {"ORA $%02X", AM_ZPG},
-  [0x08] = {"PHP", AM_IMP},
-  [0x09] = {"ORA #%02X", AM_IMM},
-  [0x0A] = {"ASL A", AM_IMP},
-  [0x0D] = {"ORA $%04X", AM_ABS},
-  [0x0E] = {"ASL $%04X", AM_ABS},
+// ASL A
+// b = A (read AM_ACC)
+// b <<= 1
+// set flags
+// A = b
 
-  [0x10] = {"BPL %02X", AM_REL},
-  [0x11] = {"ORA (%02X), Y", AM_INY},
-  [0x15] = {"ORA %02X,X", AM_ZPX},
-  [0x16] = {"ASL %02X,X", AM_ZPX},
-  [0x18] = {"CLC", AM_IMP},
-  [0x19] = {"ORA $%04X, Y", AM_ABY},
-  [0x1D] = {"ORA $%04X, X", AM_ABX},
-  [0x1E] = {"ASL $%04X, X", AM_ABX},
+enum II {
+  I_ADC_IMM = 0x69,
+  I_ADC_ZPG = 0x65,
+  I_ADC_ZPX = 0x75,
+  I_ADC_ABS = 0x6D,
+  I_ADC_ABX = 0x7D,
+  I_ADC_ABY = 0x79,
 
-  [0x20] = {"JSR $%04X", AM_ABS},
-  [0x21] = {"AND ($%02X, X)", AM_INX},
-  [0x24] = {"BIT $%02X", AM_ZPG},
-  [0x25] = {"AND $%02X", AM_ZPG},
-  [0x26] = {"ROL $%02X", AM_ZPG},
-  [0x28] = {"PLP", AM_IMP},
-  [0x29] = {"AND #%02X", AM_IMM},
-  [0x2A] = {"ROL A", AM_IMP},
-  [0x2D] = {"AND $%04X", AM_ABS},
+  I_AND_IMM = 0x29,
+  I_AND_ZPG = 0x25,
+  I_AND_ZPX = 0x35,
+  I_AND_ABS = 0x2D,
+  I_AND_ABX = 0x3D,
+  I_AND_ABY = 0x39,
+  I_AND_INX = 0x21,
+  I_AND_INY = 0x31,
+
+  I_ASL_ACC = 0x0A,
+  I_ASL_ZPG = 0x06,
+  I_ASL_ZPX = 0x16,
+  I_ASL_ABS = 0x0E,
+  I_ASL_ABX = 0x1E,
+
+  I_BCC_REL = 0x90,
+
+  I_BCS_REL = 0xB0,
+
+  I_BEQ_REL = 0xF0,
+
+  I_BIT_ZPG = 0x24,
+  I_BIT_ABS = 0x2C,
+
+  I_BMI_ZPG = 0x30,
+
+  I_BNE_REL = 0xD0,
+
+  I_BPL_REL = 0x10,
+
+  I_BRK_IMP = 0x00,
+
+  I_BVC_REL = 0x50,
+
+  I_CLC_IMP = 0x18,
+
+  I_CLD_IMP = 0xD8,
+
+  I_CLI_IMP = 0x58,
+
+  I_CLV_IMP = 0xB8,
+
+  I_CMP_IMM = 0xC9,
+  I_CMP_ZPG = 0xC5,
+  I_CMP_ZPX = 0xD5,
+  I_CMP_ABS = 0xCD,
+  I_CMP_ABX = 0xDD,
+  I_CMP_ABY = 0xD9,
+  I_CMP_INX = 0xC1,
+  I_CMP_INY = 0xD1,
+
+  CPX_IMM = 0xE0,
+  CPX_ZPG = 0xE4,
+  CPX_ABS = 0xEC,
+
+  CPY_IMM = 0xC0,
+  CPY_ZPG = 0xC4,
+  CPY_ABS = 0xCC,
+
+  DEC_ZPG = 0xC6,
+  DEC_ZPX = 0xD6,
+  DEC_ABS = 0xCE,
+  DEC_ABX = 0xDE,
+
+  DEX_IMP = 0xCA,
+
+  DEY_IMP = 0x88,
+
+  I_JSR_ABS = 0x20,
+
+  I_LDA_IMM = 0xA9,
+  I_LDA_ZPG = 0xA5,
+  I_LDA_ZPX = 0xB5,
+  I_LDA_ABS = 0xAD,
+  I_LDA_ABX = 0xBD,
+  I_LDA_ABY = 0xB9,
+  I_LDA_INX = 0xA1,
+  I_LDA_INY = 0xB1,
+
+  I_ORA_ABS = 0x0D,
+  I_ORA_ABY = 0x19,
+  I_ORA_ABX = 0x1D,
+  I_ORA_INX = 0x01,
+  I_ORA_ZPG = 0x05,
+  I_ORA_IMM = 0x09,
+  I_ORA_INY = 0x11,
+  I_ORA_ZPX = 0x15,
+
+  I_PHP_IMP = 0x08,
+
+  I_PLP_IMP = 0x28,
+
+
+  I_ROL_ZPG = 0x26,
+  I_ROL_ACC = 0x2A,
+  I_ROL_ABS = 0x2E,
+
+};
+
+instruction instructions[256] = {
+  [I_BRK_IMP] = {"BRK",            AM_IMP},
+  [I_ORA_INX] = {"ORA ($%02X, X)", AM_INX},
+  [I_ORA_ZPG] = {"ORA $%02X",      AM_ZPG},
+  [I_PHP_IMP] = {"PHP",            AM_IMP},
+  [I_ORA_IMM] = {"ORA #%02X",      AM_IMM},
+  [I_ASL_ACC] = {"ASL A",          AM_ACC},
+  [I_ORA_ABS] = {"ORA $%04X",      AM_ABS},
+  [I_ASL_ABS] = {"ASL $%04X",      AM_ABS},
+
+  [I_BPL_REL] = {"BPL %02X",      AM_REL},
+  [I_ORA_INY] = {"ORA (%02X), Y", AM_INY},
+  [I_ORA_ZPX] = {"ORA %02X,X",    AM_ZPX},
+  [I_ASL_ZPX] = {"ASL %02X,X",    AM_ZPX},
+  [I_CLC_IMP] = {"CLC",           AM_IMP},
+  [I_ORA_ABY] = {"ORA $%04X, Y",  AM_ABY},
+  [I_ORA_ABX] = {"ORA $%04X, X",  AM_ABX},
+  [I_ASL_ABX] = {"ASL $%04X, X",  AM_ABX},
+
+  [I_JSR_ABS] = {"JSR $%04X",      AM_ABS},
+  [I_AND_INX] = {"AND ($%02X, X)", AM_INX},
+  [I_BIT_ZPG] = {"BIT $%02X",      AM_ZPG},
+  [I_AND_ZPG] = {"AND $%02X",      AM_ZPG},
+  [I_ROL_ZPG] = {"ROL $%02X",      AM_ZPG},
+  [I_PLP_IMP] = {"PLP",            AM_IMP},
+  [I_AND_IMM] = {"AND #%02X",      AM_IMM},
+  [I_ROL_ACC] = {"ROL A",          AM_ACC},
+  [I_AND_ABS] = {"AND $%04X",      AM_ABS},
+  [I_ROL_ABS] = {"ROL $%04X",      AM_ABS},
 
   [0x38] = {"SEC", AM_IMP},
 
-  [0x40] = {"RTI", AM_IMP},
-  [0x4A] = {"LSR A", AM_IMP},
-  [0x48] = {"PHA", AM_IMP},
+  [0x40] = {"RTI",   AM_IMP},
+  [0x4A] = {"LSR A", AM_ACC},
+  [0x48] = {"PHA",   AM_IMP},
 
   [0x58] = {"CLI", AM_IMP},
 
-  [0x60] = {"RTS", AM_IMP},
-  [0x68] = {"PLA", AM_IMP},
-  [0x6A] = {"ROR A", AM_IMP},
+  [0x60] = {"RTS",   AM_IMP},
+  [0x68] = {"PLA",   AM_IMP},
+  [0x6A] = {"ROR A", AM_ACC},
 
   [0x78] = {"SEI", AM_IMP},
 
@@ -556,8 +242,9 @@ instruction instruction[256] = {
   [0x98] = {"TYA", AM_IMP},
   [0x9A] = {"TXS", AM_IMP},
 
-  [0xA8] = {"TAY", AM_IMP},
-  [0xAA] = {"TAX", AM_IMP},
+  [0xA8] = {"TAY",       AM_IMP},
+  [I_LDA_IMM] = {"LDA #%02X", AM_IMM},
+  [0xAA] = {"TAX",       AM_IMP},
 
   [0xB8] = {"CLV", AM_IMP},
   [0xBA] = {"TSX", AM_IMP},
@@ -593,75 +280,234 @@ typedef struct cpu {
   // program counter
   uint16_t pc;
 
+  // helper variable to store current opcode being executed
+  uint8_t op;
+
   // helper variable to store byte value read
   uint8_t b;
 
   // helper variable to store address value read
-  uint8_t addr;
+  uint16_t addr;
 } cpu;
 
-void cpu_write_state(struct cpu *cpu, FILE* f) {
+void cpu_write_state(cpu *cpu, FILE* f) {
   char xxx[] = {'N', 'V', '-', 'B', 'D', 'I', 'Z', 'C', '\0'};
   for (int i = 0; i < 8; i++) {
-	if (!((cpu->p >> (7-i)) & 1)) {
-	  xxx[i] = '.';
-	}
+  if (!((cpu->p >> (7-i)) & 1)) {
+    xxx[i] = '.';
+  }
   }
 
   fprintf(f, "A: %02X | X: %02X | Y: %02X | S: %02X | PC: %04X | P: %s\n",
-		  cpu->a, cpu->x, cpu->y, cpu->s, cpu->pc, xxx);
+      cpu->a, cpu->x, cpu->y, cpu->s, cpu->pc, xxx);
 }
 
-uint8_t cpu_fetch(cpu *cpu) {
-  uint8_t b = cpu_read(cpu->pc);
+void cpu_fetch(cpu *cpu) {
+  uint8_t op = cpu_read(cpu->pc);
+  cpu->op = op;
   cpu->pc++;
-  return b;
-}
 
-void cpu_lda_nn(cpu *cpu) {
-  uint8_t b = cpu_fetch(cpu);
-  printf("LDA, #%02X\n", b);
-  cpu->a = b;
-
-  if (b == 0) {
-    cpu->p |= F_Z;
-  } else {
-    cpu->p &= ~F_Z;
+  instruction instr = instructions[op];
+  if (!instr.fmt) {
+    fprintf(stderr, "ilegal opcode: %02X\n", op);
+    exit(1);
   }
 
-  if (b & F_N) {
-    cpu->p |= F_N;
-  } else {
-    cpu->p &= ~F_N;
+  int8_t d;
+
+  switch (instr.addr_mode) {
+  default:
+    fprintf(stderr, "ilegal addressing mode: %d\n", instr.addr_mode);
+    exit(1);
+    break;
+
+  case AM_IMP:
+    fprintf(stderr, "%s\n", instr.fmt);
+    break;
+
+  // TODO
+  case AM_INX:
+  case AM_INY:
+  case AM_ZPX:
+  case AM_ZPY:
+    break;
+
+  case AM_REL:
+    // byte read should be treated as a signed offset to current position (PC).
+    d = cpu->b;
+    // minus 1 because pc moved to read byte b
+    cpu->addr = cpu->pc - 1 + d;
+    break;
+
+  case AM_ZPG:
+    cpu->addr = cpu_read(cpu->pc);
+    fprintf(stderr, instr.fmt, cpu->addr);
+    break;
+
+  case AM_IMM:
+    cpu->b = cpu_read(cpu->pc);
+    fprintf(stderr, instr.fmt, cpu->b);
+    cpu->pc++;
+    break;
+
+  // TODO
+  case AM_IND:
+  case AM_ABX:
+  case AM_ABY:
+    break;
+
+  case AM_ABS:
+    cpu->addr = cpu_read(cpu->pc);
+    cpu->pc++;
+    cpu->addr |= ((uint16_t) cpu_read(cpu->pc)) << 8;
+    cpu->pc++;
+
+    fprintf(stderr, instr.fmt, cpu->b);
+    break;
+  }
+
+  fprintf(stderr, "\n");
+}
+
+void cpu_read_addr_mode(cpu *cpu, addr_mode_t am) {
+  switch (am) {
+  default:
+    fprintf(stderr, "ilegal addressing mode: %d\n", am);
+    exit(1);
+
+  case AM_IMP:
+    fprintf(stderr, "called cpu_read_addr_mode but addressing mode is 'implied'");
+    exit(1);
+
+  case AM_ACC:
+    cpu->b = cpu->a;
+    break;
+
+  case AM_IMM:
+    // value is already in cpu->b. nothing to do.
+    break;
+
+  case AM_ABS:
+  case AM_ZPG:
+    // address was already fetched and parsed by cpu_fetch, just read from it
+    cpu->b = cpu_read(cpu->addr);
+    break;
+
+    // TODO
+  case AM_INX:
+  case AM_INY:
+  case AM_REL:
+  case AM_ZPX:
+  case AM_ZPY:
+  case AM_IND:
+  case AM_ABX:
+  case AM_ABY:
+    break;
   }
 }
 
-void cpu_set_flag(cpu *cpu, enum flag flag, uint8_t val) {
-  val &= 1;
-  TODO
-  /* cpu->p */
+void cpu_write_addr_mode(cpu *cpu, addr_mode_t am) {
+  switch (am) {
+  default:
+    fprintf(stderr, "ilegal addressing mode: %d\n", am);
+    exit(1);
+
+  case AM_IMM:
+  case AM_IMP:
+    fprintf(stderr, "called cpu_write_addr_mode but addressing mode is 'implied' or 'immediate'");
+    exit(1);
+
+  case AM_ACC:
+    cpu->a = cpu->b;
+    break;
+
+  case AM_ZPG:
+  case AM_ABS:
+    // address was already parsed by cpu_fetch, just read from it
+    printf("addr = %04X, b = %02X\n", cpu->addr, cpu->b);
+    cpu_write(cpu->addr, cpu->b);
+    break;
+
+    // TODO
+  case AM_INX:
+  case AM_INY:
+  case AM_REL:
+  case AM_ZPX:
+  case AM_ZPY:
+  case AM_IND:
+  case AM_ABX:
+  case AM_ABY:
+    break;
+  }
 }
 
-void cpu_get_flag(cpu *cpu, enum flag flag) {
-  TODO
-  /* return cpu->p & flag */
-  /* cpu->p */
+void cpu_exec(cpu *cpu) {
+  instruction instr = instructions[cpu->op];
+
+  switch (cpu->op) {
+  case I_LDA_IMM:
+  case I_LDA_ZPG:
+  case I_LDA_ZPX:
+  case I_LDA_ABS:
+  case I_LDA_ABX:
+  case I_LDA_ABY:
+  case I_LDA_INX:
+  case I_LDA_INY:
+    cpu_read_addr_mode(cpu, instr.addr_mode);
+    cpu->a = cpu->b;
+    cpu->p |= cpu->a & F_N;
+    break;
+
+  case I_ROL_ZPG:
+  case I_ROL_ABS:
+  case I_ROL_ACC:
+    cpu_read_addr_mode(cpu, instr.addr_mode);
+    cpu->b = (cpu->b << 1) | (cpu->b >> 7);
+    cpu_write_addr_mode(cpu, instr.addr_mode);
+    break;
+  }
+}
+
+void test_lda() {
+  printf("--> [%s] %s\n", __FILE__, __func__);
+  cpu cpu = {0};
+  cpu.p = 0x26;
+  cpu.pc = 0;
+  ram[0x00] = I_LDA_IMM;
+  ram[0x01] = 0x85;
+  cpu_fetch(&cpu);
+  cpu_exec(&cpu);
+  puts("load accumulator - immediate - 0x85 -> N=1");
+  assert(cpu.p & F_N);
+}
+
+void test_rol() {
+  printf("--> [%s] %s\n", __FILE__, __func__);
+  cpu cpu = {0};
+  cpu.p = 0x26;
+  cpu.pc = 0;
+  ram[0x00] = I_ROL_ZPG;
+  ram[0x01] = 0x02;
+  ram[0x02] = 0x80;
+  cpu_fetch(&cpu);
+  cpu_exec(&cpu);
+  puts("rotate left - zero page - 0x08 -> 0x01");
+  assert(ram[0x02] == 0x01);
 }
 
 int main() {
+  test_lda();
+  test_rol();
+
   cpu cpu = {0};
-  cpu.p = 0xFF;
+  cpu.p = 0x26;
   cpu.pc = 0;
-  ram[0] = 0xA9;
-  ram[1] = 0x01;
+  ram[0x00] = I_ROL_ZPG;
+  ram[0x01] = 0x02;
+  ram[0x02] = 0x80;
 
-  uint8_t instr = cpu_fetch(&cpu);
-  assert(instr == 0xA9);
-  switch (instr) {
-	
-  }
-
-  cpu_write_state(&cpu, stderr);
-  cpu_lda_nn(&cpu);
-  cpu_write_state(&cpu, stderr);
+  /* cpu_write_state(&cpu, stderr); */
+  /* cpu_fetch(&cpu); */
+  /* cpu_exec(&cpu); */
+  /* cpu_write_state(&cpu, stderr); */
 }
