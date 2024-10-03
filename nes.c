@@ -326,12 +326,19 @@ typedef struct cpu {
   uint16_t addr;
 } cpu;
 
+// TODO: check the right way to do it
+void cpu_init(cpu *cpu) {
+  cpu->pc = 0xFFFC;
+  cpu->s = 0xFF;
+  cpu->p = 0;
+}
+
 void cpu_write_state(cpu *cpu, FILE* f) {
   char xxx[] = {'N', 'V', '-', 'B', 'D', 'I', 'Z', 'C', '\0'};
   for (int i = 0; i < 8; i++) {
-  if (!((cpu->p >> (7-i)) & 1)) {
-    xxx[i] = '.';
-  }
+    if (!((cpu->p >> (7-i)) & 1)) {
+      xxx[i] = '.';
+    }
   }
 
   fprintf(f, "A: %02X | X: %02X | Y: %02X | S: %02X | PC: %04X | P: %s\n",
@@ -371,12 +378,6 @@ void cpu_fetch(cpu *cpu) {
     fprintf(stderr, "%s", instr.fmt);
     break;
 
-  case AM_INX:
-  case AM_INY:
-  case AM_ZPX:
-  case AM_ZPY:
-    TODO;
-
   case AM_REL:
     // byte read should be treated as a signed offset to current position (PC).
     d = cpu->b;
@@ -389,16 +390,21 @@ void cpu_fetch(cpu *cpu) {
     fprintf(stderr, "%s $%02X ; $%04X", instr.fmt, cpu->addr, cpu->addr);
     break;
 
+  case AM_ZPX:
+    cpu->addr = cpu_read(cpu->pc) + cpu->x;
+    fprintf(stderr, "%s $%02X,X ; $%04X", instr.fmt, cpu->addr, cpu->addr);
+    break;
+
+  case AM_ZPY:
+    cpu->addr = cpu_read(cpu->pc) + cpu->y;
+    fprintf(stderr, "%s $%02X,Y ; $%04X", instr.fmt, cpu->addr, cpu->addr);
+    break;
+
   case AM_IMM:
     cpu->b = cpu_read(cpu->pc);
     fprintf(stderr, "%s #%02X", instr.fmt, cpu->b);
     cpu->pc++;
     break;
-
-  case AM_IND:
-  case AM_ABX:
-  case AM_ABY:
-    TODO;
 
   case AM_ABS:
     cpu->addr = cpu_read(cpu->pc);
@@ -408,6 +414,29 @@ void cpu_fetch(cpu *cpu) {
 
     fprintf(stderr, "%s $%04X", instr.fmt, cpu->addr);
     break;
+
+  case AM_ABX:
+    cpu->addr = ((uint16_t) cpu_read(cpu->pc)) + cpu->x;
+    cpu->pc++;
+    cpu->addr |= ((uint16_t) cpu_read(cpu->pc)) << 8;
+    cpu->pc++;
+
+    fprintf(stderr, "%s $%04X,X", instr.fmt, cpu->addr);
+    break;
+
+  case AM_ABY:
+    cpu->addr = ((uint16_t) cpu_read(cpu->pc)) + cpu->y;
+    cpu->pc++;
+    cpu->addr |= ((uint16_t) cpu_read(cpu->pc)) << 8;
+    cpu->pc++;
+
+    fprintf(stderr, "%s $%04X,Y", instr.fmt, cpu->addr);
+    break;
+
+  case AM_IND:
+  case AM_INX:
+  case AM_INY:
+    TODO;
   }
 
   fprintf(stderr, "\n");
@@ -431,21 +460,19 @@ void cpu_read_addr_mode(cpu *cpu, addr_mode_t am) {
     // value is already in cpu->b. nothing to do.
     break;
 
-  case AM_ABS:
   case AM_ZPG:
-    // address was already fetched and parsed by cpu_fetch, just read from it
-    cpu->b = cpu_read(cpu->addr);
-    break;
-
+  case AM_ZPX:
+  case AM_ZPY:
+  case AM_ABS:
+  case AM_ABX:
+  case AM_ABY:
   case AM_INX:
   case AM_INY:
   case AM_REL:
-  case AM_ZPX:
-  case AM_ZPY:
   case AM_IND:
-  case AM_ABX:
-  case AM_ABY:
-    TODO;
+    // address was already fetched and parsed by cpu_fetch, just read from it
+    cpu->b = cpu_read(cpu->addr);
+    break;
   }
 }
 
@@ -465,21 +492,17 @@ void cpu_write_addr_mode(cpu *cpu, addr_mode_t am) {
     break;
 
   case AM_ZPG:
+  case AM_ZPX:
+  case AM_ZPY:
   case AM_ABS:
-    // address was already parsed by cpu_fetch, just read from it
-    printf("addr = %04X, b = %02X\n", cpu->addr, cpu->b);
-    cpu_write(cpu->addr, cpu->b);
-    break;
-
+  case AM_ABX:
+  case AM_ABY:
   case AM_INX:
   case AM_INY:
   case AM_REL:
-  case AM_ZPX:
-  case AM_ZPY:
   case AM_IND:
-  case AM_ABX:
-  case AM_ABY:
-    TODO;
+    cpu_write(cpu->addr, cpu->b);
+    break;
   }
 }
 
@@ -767,7 +790,8 @@ void cpu_exec(cpu *cpu) {
 
 void test_lda() {
   printf("--> [%s] %s\n", __FILE__, __func__);
-  cpu cpu = {0};
+  cpu cpu;
+  cpu_init(&cpu);
   cpu.p = 0x26;
   cpu.pc = 0;
   ram[0x00] = 0xA9;
@@ -780,7 +804,8 @@ void test_lda() {
 
 void test_rol() {
   printf("--> [%s] %s\n", __FILE__, __func__);
-  cpu cpu = {0};
+  cpu cpu;
+  cpu_init(&cpu);
   cpu.p = 0x26;
   cpu.pc = 0;
   ram[0x00] = 0x26;
