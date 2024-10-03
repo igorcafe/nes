@@ -317,7 +317,7 @@ typedef struct cpu {
   uint16_t pc;
 
   // helper variable to store current instruction being executed
-  instruction op;
+  instruction instr;
 
   // helper variable to store byte value read
   uint8_t b;
@@ -356,7 +356,7 @@ void cpu_fetch(cpu *cpu) {
     exit(1);
   }
 
-  cpu->op = instr;
+  cpu->instr = instr;
   cpu->pc++;
 
   int8_t d;
@@ -486,42 +486,42 @@ void cpu_write_addr_mode(cpu *cpu, addr_mode_t am) {
 // many of the instructions are incomplete or wrong, but the idea is that
 // nestest will find those errors, so i don't have to worry for now
 void cpu_exec(cpu *cpu) {
-  switch (cpu->op.instruction) {
+  switch (cpu->instr.instruction) {
   default:
     TODO;
 
   case I_ADC:
-    cpu_read_addr_mode(cpu, cpu->op.addr_mode);
+    cpu_read_addr_mode(cpu, cpu->instr.addr_mode);
     cpu->a += cpu->b;
     break;
 
   case I_AND:
-    cpu_read_addr_mode(cpu, cpu->op.addr_mode);
+    cpu_read_addr_mode(cpu, cpu->instr.addr_mode);
     cpu->a &= cpu->b;
     break;
 
   case I_ASL:
-    cpu_read_addr_mode(cpu, cpu->op.addr_mode);
+    cpu_read_addr_mode(cpu, cpu->instr.addr_mode);
     cpu->b <<= 1;
-    cpu_write_addr_mode(cpu, cpu->op.addr_mode);
+    cpu_write_addr_mode(cpu, cpu->instr.addr_mode);
     break;
 
   case I_BCC:
-    cpu_read_addr_mode(cpu, cpu->op.addr_mode);
+    cpu_read_addr_mode(cpu, cpu->instr.addr_mode);
     if (!(cpu->p & F_C)) {
       cpu->pc += (int8_t) cpu->b;
     }
     break;
 
   case I_BCS:
-    cpu_read_addr_mode(cpu, cpu->op.addr_mode);
+    cpu_read_addr_mode(cpu, cpu->instr.addr_mode);
     if (cpu->p & F_C) {
       cpu->pc += (int8_t) cpu->b;
     }
     break;
 
   case I_BEQ:
-    cpu_read_addr_mode(cpu, cpu->op.addr_mode);
+    cpu_read_addr_mode(cpu, cpu->instr.addr_mode);
     if (cpu->p & F_Z) {
       cpu->pc += (int8_t) cpu->b;
     }
@@ -531,21 +531,21 @@ void cpu_exec(cpu *cpu) {
     TODO;
 
   case I_BMI:
-    cpu_read_addr_mode(cpu, cpu->op.addr_mode);
+    cpu_read_addr_mode(cpu, cpu->instr.addr_mode);
     if (cpu->p & F_N) {
       cpu->pc += (int8_t) cpu->b;
     }
     break;
 
   case I_BNE:
-    cpu_read_addr_mode(cpu, cpu->op.addr_mode);
+    cpu_read_addr_mode(cpu, cpu->instr.addr_mode);
     if (cpu->p & F_Z) {
       cpu->pc += (int8_t) cpu->b;
     }
     break;
 
   case I_BPL:
-    cpu_read_addr_mode(cpu, cpu->op.addr_mode);
+    cpu_read_addr_mode(cpu, cpu->instr.addr_mode);
     if (!(cpu->p & F_N)) {
       cpu->pc += (int8_t) cpu->b;
     }
@@ -555,7 +555,7 @@ void cpu_exec(cpu *cpu) {
     TODO;
 
   case I_BVC:
-    cpu_read_addr_mode(cpu, cpu->op.addr_mode);
+    cpu_read_addr_mode(cpu, cpu->instr.addr_mode);
     if (!(cpu->p & F_V)) {
       cpu->pc += (int8_t) cpu->b;
     }
@@ -583,9 +583,9 @@ void cpu_exec(cpu *cpu) {
     TODO;
 
   case I_DEC:
-    cpu_read_addr_mode(cpu, cpu->op.addr_mode);
+    cpu_read_addr_mode(cpu, cpu->instr.addr_mode);
     cpu->b--;
-    cpu_write_addr_mode(cpu, cpu->op.addr_mode);
+    cpu_write_addr_mode(cpu, cpu->instr.addr_mode);
     break;
 
   case I_DEX:
@@ -597,14 +597,14 @@ void cpu_exec(cpu *cpu) {
     break;
 
   case I_EOR:
-    cpu_read_addr_mode(cpu, cpu->op.addr_mode);
+    cpu_read_addr_mode(cpu, cpu->instr.addr_mode);
     cpu->a ^= cpu->b;
     break;
 
   case I_INC:
-    cpu_read_addr_mode(cpu, cpu->op.addr_mode);
+    cpu_read_addr_mode(cpu, cpu->instr.addr_mode);
     cpu->b++;
-    cpu_write_addr_mode(cpu, cpu->op.addr_mode);
+    cpu_write_addr_mode(cpu, cpu->instr.addr_mode);
     break;
 
   case I_INX:
@@ -627,34 +627,34 @@ void cpu_exec(cpu *cpu) {
     break;
 
   case I_LDA:
-    cpu_read_addr_mode(cpu, cpu->op.addr_mode);
+    cpu_read_addr_mode(cpu, cpu->instr.addr_mode);
     cpu->a = cpu->b;
     cpu->p |= cpu->a & F_N;
     break;
 
   case I_LDX:
-    cpu_read_addr_mode(cpu, cpu->op.addr_mode);
+    cpu_read_addr_mode(cpu, cpu->instr.addr_mode);
     cpu->x = cpu->b;
     cpu->p |= cpu->a & F_N;
     break;
 
   case I_LDY:
-    cpu_read_addr_mode(cpu, cpu->op.addr_mode);
+    cpu_read_addr_mode(cpu, cpu->instr.addr_mode);
     cpu->y = cpu->b;
     cpu->p |= cpu->a & F_N;
     break;
 
   case I_LSR:
-    cpu_read_addr_mode(cpu, cpu->op.addr_mode);
+    cpu_read_addr_mode(cpu, cpu->instr.addr_mode);
     cpu->b >>= 1;
-    cpu_write_addr_mode(cpu, cpu->op.addr_mode);
+    cpu_write_addr_mode(cpu, cpu->instr.addr_mode);
     break;
 
   case I_NOP:
     break;
 
   case I_ORA:
-    cpu_read_addr_mode(cpu, cpu->op.addr_mode);
+    cpu_read_addr_mode(cpu, cpu->instr.addr_mode);
     cpu->a |= cpu->b;
     break;
 
@@ -679,9 +679,9 @@ void cpu_exec(cpu *cpu) {
     break;
 
   case I_ROR:
-    cpu_read_addr_mode(cpu, cpu->op.addr_mode);
+    cpu_read_addr_mode(cpu, cpu->instr.addr_mode);
     cpu->b >>= 1;
-    cpu_write_addr_mode(cpu, cpu->op.addr_mode);
+    cpu_write_addr_mode(cpu, cpu->instr.addr_mode);
     break;
 
   case I_RTI:
@@ -703,7 +703,7 @@ void cpu_exec(cpu *cpu) {
     break;
 
   case I_SBC:
-    cpu_read_addr_mode(cpu, cpu->op.addr_mode);
+    cpu_read_addr_mode(cpu, cpu->instr.addr_mode);
     cpu->a -= cpu->b;
     break;
 
@@ -721,17 +721,17 @@ void cpu_exec(cpu *cpu) {
 
   case I_STA:
     cpu->b = cpu->a;
-    cpu_write_addr_mode(cpu, cpu->op.addr_mode);
+    cpu_write_addr_mode(cpu, cpu->instr.addr_mode);
     break;
 
   case I_STX:
     cpu->b = cpu->x;
-    cpu_write_addr_mode(cpu, cpu->op.addr_mode);
+    cpu_write_addr_mode(cpu, cpu->instr.addr_mode);
     break;
 
   case I_STY:
     cpu->b = cpu->y;
-    cpu_write_addr_mode(cpu, cpu->op.addr_mode);
+    cpu_write_addr_mode(cpu, cpu->instr.addr_mode);
     break;
 
   case I_TAX:
@@ -758,9 +758,9 @@ void cpu_exec(cpu *cpu) {
     break;
 
   case I_ROL:
-    cpu_read_addr_mode(cpu, cpu->op.addr_mode);
+    cpu_read_addr_mode(cpu, cpu->instr.addr_mode);
     cpu->b = (cpu->b << 1) | (cpu->b >> 7);
-    cpu_write_addr_mode(cpu, cpu->op.addr_mode);
+    cpu_write_addr_mode(cpu, cpu->instr.addr_mode);
     break;
   }
 }
