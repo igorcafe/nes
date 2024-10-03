@@ -69,15 +69,8 @@ typedef enum addr_mode_t {
   AM_LEN,
 } addr_mode_t;
 
-typedef enum instruction_t {
-  I_LDA,
-} instruction_t;
 
 
-typedef struct instruction {
-  char *fmt;
-  addr_mode_t addr_mode;
-} instruction;
 
 // ASL A
 // b = A (read AM_ACC)
@@ -85,179 +78,222 @@ typedef struct instruction {
 // set flags
 // A = b
 
-enum II {
-  I_ADC_IMM = 0x69,
-  I_ADC_ZPG = 0x65,
-  I_ADC_ZPX = 0x75,
-  I_ADC_ABS = 0x6D,
-  I_ADC_ABX = 0x7D,
-  I_ADC_ABY = 0x79,
+typedef enum instruction_t {
+  I_INVALID = 0,
+  I_ADC,
+  I_AND,
+  I_ASL,
+  I_BCC,
+  I_BCS,
+  I_BEQ,
+  I_BIT,
+  I_BMI,
+  I_BNE,
+  I_BPL,
+  I_BRK,
+  I_BVC,
+  I_CLC,
+  I_CLD,
+  I_CLI,
+  I_CLV,
+  I_CMP,
+  I_CPX,
+  I_CPY,
+  I_DEC,
+  I_DEX,
+  I_DEY,
+  I_EOR,
+  I_INC,
+  I_INX,
+  I_INY,
+  I_JMP,
+  I_JSR,
+  I_LDA,
+  I_LDX,
+  I_LDY,
+  I_LSR,
+  I_NOP,
+  I_ORA,
+  I_PHA,
+  I_PHP,
+  I_PLA,
+  I_PLP,
+  I_ROL,
+  I_ROR,
+  I_RTI,
+  I_RTS,
+  I_SBC,
+  I_SEC,
+  I_SED,
+  I_SEI,
+  I_STA,
+  I_STX,
+  I_STY,
+  I_TAX,
+  I_TAY,
+  I_TSX,
+  I_TXA,
+  I_TXS,
+  I_TYA,
+} instruction_t;
 
-  I_AND_IMM = 0x29,
-  I_AND_ZPG = 0x25,
-  I_AND_ZPX = 0x35,
-  I_AND_ABS = 0x2D,
-  I_AND_ABX = 0x3D,
-  I_AND_ABY = 0x39,
-  I_AND_INX = 0x21,
-  I_AND_INY = 0x31,
+typedef struct instruction {
+  char *fmt;
+  uint8_t opcode;
+  instruction_t instruction;
+  addr_mode_t addr_mode;
+} instruction;
 
-  I_ASL_ACC = 0x0A,
-  I_ASL_ZPG = 0x06,
-  I_ASL_ZPX = 0x16,
-  I_ASL_ABS = 0x0E,
-  I_ASL_ABX = 0x1E,
-
-  I_BCC_REL = 0x90,
-
-  I_BCS_REL = 0xB0,
-
-  I_BEQ_REL = 0xF0,
-
-  I_BIT_ZPG = 0x24,
-  I_BIT_ABS = 0x2C,
-
-  I_BMI_ZPG = 0x30,
-
-  I_BNE_REL = 0xD0,
-
-  I_BPL_REL = 0x10,
-
-  I_BRK_IMP = 0x00,
-
-  I_BVC_REL = 0x50,
-
-  I_CLC_IMP = 0x18,
-
-  I_CLD_IMP = 0xD8,
-
-  I_CLI_IMP = 0x58,
-
-  I_CLV_IMP = 0xB8,
-
-  I_CMP_IMM = 0xC9,
-  I_CMP_ZPG = 0xC5,
-  I_CMP_ZPX = 0xD5,
-  I_CMP_ABS = 0xCD,
-  I_CMP_ABX = 0xDD,
-  I_CMP_ABY = 0xD9,
-  I_CMP_INX = 0xC1,
-  I_CMP_INY = 0xD1,
-
-  CPX_IMM = 0xE0,
-  CPX_ZPG = 0xE4,
-  CPX_ABS = 0xEC,
-
-  CPY_IMM = 0xC0,
-  CPY_ZPG = 0xC4,
-  CPY_ABS = 0xCC,
-
-  DEC_ZPG = 0xC6,
-  DEC_ZPX = 0xD6,
-  DEC_ABS = 0xCE,
-  DEC_ABX = 0xDE,
-
-  DEX_IMP = 0xCA,
-
-  DEY_IMP = 0x88,
-
-  I_JSR_ABS = 0x20,
-
-  I_LDA_IMM = 0xA9,
-  I_LDA_ZPG = 0xA5,
-  I_LDA_ZPX = 0xB5,
-  I_LDA_ABS = 0xAD,
-  I_LDA_ABX = 0xBD,
-  I_LDA_ABY = 0xB9,
-  I_LDA_INX = 0xA1,
-  I_LDA_INY = 0xB1,
-
-  I_ORA_ABS = 0x0D,
-  I_ORA_ABY = 0x19,
-  I_ORA_ABX = 0x1D,
-  I_ORA_INX = 0x01,
-  I_ORA_ZPG = 0x05,
-  I_ORA_IMM = 0x09,
-  I_ORA_INY = 0x11,
-  I_ORA_ZPX = 0x15,
-
-  I_PHP_IMP = 0x08,
-
-  I_PLP_IMP = 0x28,
-
-
-  I_ROL_ZPG = 0x26,
-  I_ROL_ACC = 0x2A,
-  I_ROL_ABS = 0x2E,
-
-};
-
-instruction instructions[256] = {
-  [I_BRK_IMP] = {"BRK",            AM_IMP},
-  [I_ORA_INX] = {"ORA ($%02X, X)", AM_INX},
-  [I_ORA_ZPG] = {"ORA $%02X",      AM_ZPG},
-  [I_PHP_IMP] = {"PHP",            AM_IMP},
-  [I_ORA_IMM] = {"ORA #%02X",      AM_IMM},
-  [I_ASL_ACC] = {"ASL A",          AM_ACC},
-  [I_ORA_ABS] = {"ORA $%04X",      AM_ABS},
-  [I_ASL_ABS] = {"ASL $%04X",      AM_ABS},
-
-  [I_BPL_REL] = {"BPL %02X",      AM_REL},
-  [I_ORA_INY] = {"ORA (%02X), Y", AM_INY},
-  [I_ORA_ZPX] = {"ORA %02X,X",    AM_ZPX},
-  [I_ASL_ZPX] = {"ASL %02X,X",    AM_ZPX},
-  [I_CLC_IMP] = {"CLC",           AM_IMP},
-  [I_ORA_ABY] = {"ORA $%04X, Y",  AM_ABY},
-  [I_ORA_ABX] = {"ORA $%04X, X",  AM_ABX},
-  [I_ASL_ABX] = {"ASL $%04X, X",  AM_ABX},
-
-  [I_JSR_ABS] = {"JSR $%04X",      AM_ABS},
-  [I_AND_INX] = {"AND ($%02X, X)", AM_INX},
-  [I_BIT_ZPG] = {"BIT $%02X",      AM_ZPG},
-  [I_AND_ZPG] = {"AND $%02X",      AM_ZPG},
-  [I_ROL_ZPG] = {"ROL $%02X",      AM_ZPG},
-  [I_PLP_IMP] = {"PLP",            AM_IMP},
-  [I_AND_IMM] = {"AND #%02X",      AM_IMM},
-  [I_ROL_ACC] = {"ROL A",          AM_ACC},
-  [I_AND_ABS] = {"AND $%04X",      AM_ABS},
-  [I_ROL_ABS] = {"ROL $%04X",      AM_ABS},
-
-  [0x38] = {"SEC", AM_IMP},
-
-  [0x40] = {"RTI",   AM_IMP},
-  [0x4A] = {"LSR A", AM_ACC},
-  [0x48] = {"PHA",   AM_IMP},
-
-  [0x58] = {"CLI", AM_IMP},
-
-  [0x60] = {"RTS",   AM_IMP},
-  [0x68] = {"PLA",   AM_IMP},
-  [0x6A] = {"ROR A", AM_ACC},
-
-  [0x78] = {"SEI", AM_IMP},
-
-  [0x88] = {"DEY", AM_IMP},
-  [0x8A] = {"TXA", AM_IMP},
-
-  [0x98] = {"TYA", AM_IMP},
-  [0x9A] = {"TXS", AM_IMP},
-
-  [0xA8] = {"TAY",       AM_IMP},
-  [I_LDA_IMM] = {"LDA #%02X", AM_IMM},
-  [0xAA] = {"TAX",       AM_IMP},
-
-  [0xB8] = {"CLV", AM_IMP},
-  [0xBA] = {"TSX", AM_IMP},
-
-  [0xC8] = {"INY", AM_IMP},
-  [0xCA] = {"DEX", AM_IMP},
-
-  [0xD8] = {"CLD", AM_IMP},
-
-  [0xE8] = {"INX", AM_IMP},
-  [0xEA] = {"NOP", AM_IMP},
-
-  [0xF8] = {"SED", AM_IMP},
+instruction instructions[] = {
+  {"ADC", 0x69, I_ADC, AM_IMM},
+  {"ADC", 0x65, I_ADC, AM_ZPG},
+  {"ADC", 0x75, I_ADC, AM_ZPX},
+  {"ADC", 0x6D, I_ADC, AM_ABS},
+  {"ADC", 0x7D, I_ADC, AM_ABX},
+  {"ADC", 0x79, I_ADC, AM_ABY},
+  {"AND", 0x29, I_AND, AM_IMM},
+  {"AND", 0x25, I_AND, AM_ZPG},
+  {"AND", 0x35, I_AND, AM_ZPX},
+  {"AND", 0x2D, I_AND, AM_ABS},
+  {"AND", 0x3D, I_AND, AM_ABX},
+  {"AND", 0x39, I_AND, AM_ABY},
+  {"AND", 0x21, I_AND, AM_INX},
+  {"AND", 0x31, I_AND, AM_INY},
+  {"ASL", 0x0A, I_ASL, AM_ACC},
+  {"ASL", 0x06, I_ASL, AM_ZPG},
+  {"ASL", 0x16, I_ASL, AM_ZPX},
+  {"ASL", 0x0E, I_ASL, AM_ABS},
+  {"ASL", 0x1E, I_ASL, AM_ABX},
+  {"BCC", 0x90, I_BCC, AM_REL},
+  {"BCS", 0xB0, I_BCS, AM_REL},
+  {"BEQ", 0xF0, I_BEQ, AM_REL},
+  {"BIT", 0x24, I_BIT, AM_ZPG},
+  {"BIT", 0x2C, I_BIT, AM_ABS},
+  {"BMI", 0x30, I_BMI, AM_ZPG},
+  {"BNE", 0xD0, I_BNE, AM_REL},
+  {"BPL", 0x10, I_BPL, AM_REL},
+  {"BRK", 0x00, I_BRK, AM_IMP},
+  {"BVC", 0x50, I_BVC, AM_REL},
+  {"CLC", 0x18, I_CLC, AM_IMP},
+  {"CLD", 0xD8, I_CLD, AM_IMP},
+  {"CLI", 0x58, I_CLI, AM_IMP},
+  {"CLV", 0xB8, I_CLV, AM_IMP},
+  {"CMP", 0xC9, I_CMP, AM_IMM},
+  {"CMP", 0xC5, I_CMP, AM_ZPG},
+  {"CMP", 0xD5, I_CMP, AM_ZPX},
+  {"CMP", 0xCD, I_CMP, AM_ABS},
+  {"CMP", 0xDD, I_CMP, AM_ABX},
+  {"CMP", 0xD9, I_CMP, AM_ABY},
+  {"CMP", 0xC1, I_CMP, AM_INX},
+  {"CMP", 0xD1, I_CMP, AM_INY},
+  {"CPX", 0xE0, I_CPX, AM_IMM},
+  {"CPX", 0xE4, I_CPX, AM_ZPG},
+  {"CPX", 0xEC, I_CPX, AM_ABS},
+  {"CPY", 0xC0, I_CPY, AM_IMM},
+  {"CPY", 0xC4, I_CPY, AM_ZPG},
+  {"CPY", 0xCC, I_CPY, AM_ABS},
+  {"DEC", 0xC6, I_DEC, AM_ZPG},
+  {"DEC", 0xD6, I_DEC, AM_ZPX},
+  {"DEC", 0xCE, I_DEC, AM_ABS},
+  {"DEC", 0xDE, I_DEC, AM_ABX},
+  {"DEX", 0xCA, I_DEX, AM_IMP},
+  {"DEY", 0x88, I_DEY, AM_IMP},
+  {"EOR", 0x49, I_EOR, AM_IMM},
+  {"EOR", 0x45, I_EOR, AM_ZPG},
+  {"EOR", 0x55, I_EOR, AM_ZPX},
+  {"EOR", 0x4D, I_EOR, AM_ABS},
+  {"EOR", 0x5D, I_EOR, AM_ABX},
+  {"EOR", 0x59, I_EOR, AM_ABY},
+  {"EOR", 0x41, I_EOR, AM_INX},
+  {"EOR", 0x51, I_EOR, AM_INY},
+  {"INC", 0xE6, I_INC, AM_ZPG},
+  {"INC", 0xF6, I_INC, AM_ZPX},
+  {"INC", 0xEE, I_INC, AM_ABS},
+  {"INC", 0xFE, I_INC, AM_ABX},
+  {"INX", 0xE8, I_INX, AM_IMP},
+  {"INY", 0xC8, I_INY, AM_IMP},
+  {"JMP", 0x4C, I_JMP, AM_ABS},
+  {"JMP", 0x6C, I_JMP, AM_IND},
+  {"JSR", 0x20, I_JSR, AM_ABS},
+  {"LDA", 0xA9, I_LDA, AM_IMM},
+  {"LDA", 0xA5, I_LDA, AM_ZPG},
+  {"LDA", 0xB5, I_LDA, AM_ZPX},
+  {"LDA", 0xAD, I_LDA, AM_ABS},
+  {"LDA", 0xBD, I_LDA, AM_ABX},
+  {"LDA", 0xB9, I_LDA, AM_ABY},
+  {"LDA", 0xA1, I_LDA, AM_INX},
+  {"LDA", 0xB1, I_LDA, AM_INY},
+  {"LDX", 0xA2, I_LDX, AM_IMM},
+  {"LDX", 0xA6, I_LDX, AM_ZPG},
+  {"LDX", 0xB6, I_LDX, AM_ZPY},
+  {"LDX", 0xAE, I_LDX, AM_ABS},
+  {"LDX", 0xBE, I_LDX, AM_ABY},
+  {"LDY", 0xA0, I_LDY, AM_IMM},
+  {"LDY", 0xA4, I_LDY, AM_ZPG},
+  {"LDY", 0xB4, I_LDY, AM_ZPX},
+  {"LDY", 0xAC, I_LDY, AM_ABS},
+  {"LDY", 0xBC, I_LDY, AM_ABX},
+  {"LSR", 0x4A, I_LSR, AM_ACC},
+  {"LSR", 0x46, I_LSR, AM_ZPG},
+  {"LSR", 0x56, I_LSR, AM_ZPX},
+  {"LSR", 0x4E, I_LSR, AM_ABS},
+  {"LSR", 0x5E, I_LSR, AM_ABX},
+  {"NOP", 0xEA, I_NOP, AM_IMP},
+  {"ORA", 0x09, I_ORA, AM_IMM},
+  {"ORA", 0x05, I_ORA, AM_ZPG},
+  {"ORA", 0x15, I_ORA, AM_ZPX},
+  {"ORA", 0x0D, I_ORA, AM_ABS},
+  {"ORA", 0x1D, I_ORA, AM_ABX},
+  {"ORA", 0x19, I_ORA, AM_ABY},
+  {"ORA", 0x01, I_ORA, AM_INX},
+  {"ORA", 0x11, I_ORA, AM_INY},
+  {"PHA", 0x48, I_PHA, AM_IMP},
+  {"PHP", 0x08, I_PHP, AM_IMP},
+  {"PLA", 0x68, I_PLA, AM_IMP},
+  {"PLP", 0x28, I_PLP, AM_IMP},
+  {"ROL", 0x2A, I_ROL, AM_ACC},
+  {"ROL", 0x26, I_ROL, AM_ZPG},
+  {"ROL", 0x36, I_ROL, AM_ZPX},
+  {"ROL", 0x2E, I_ROL, AM_ABS},
+  {"ROL", 0x3E, I_ROL, AM_ABX},
+  {"ROR", 0x6A, I_ROR, AM_ACC},
+  {"ROR", 0x66, I_ROR, AM_ZPG},
+  {"ROR", 0x76, I_ROR, AM_ZPX},
+  {"ROR", 0x6E, I_ROR, AM_ABS},
+  {"ROR", 0x7E, I_ROR, AM_ABX},
+  {"RTI", 0x40, I_RTI, AM_IMP},
+  {"RTS", 0x60, I_RTS, AM_IMP},
+  {"SBC", 0xE9, I_SBC, AM_IMM},
+  {"SBC", 0xE5, I_SBC, AM_ZPG},
+  {"SBC", 0xF5, I_SBC, AM_ZPX},
+  {"SBC", 0xED, I_SBC, AM_ABS},
+  {"SBC", 0xFD, I_SBC, AM_ABX},
+  {"SBC", 0xF9, I_SBC, AM_ABY},
+  {"SBC", 0xE1, I_SBC, AM_INX},
+  {"SBC", 0xF1, I_SBC, AM_INY},
+  {"SEC", 0x38, I_SEC, AM_IMP},
+  {"SED", 0xF8, I_SED, AM_IMP},
+  {"SEI", 0x78, I_SEI, AM_IMP},
+  {"STA", 0x85, I_STA, AM_ZPG},
+  {"STA", 0x95, I_STA, AM_ZPX},
+  {"STA", 0x8D, I_STA, AM_ABS},
+  {"STA", 0x9D, I_STA, AM_ABX},
+  {"STA", 0x99, I_STA, AM_ABY},
+  {"STA", 0x81, I_STA, AM_INX},
+  {"STA", 0x91, I_STA, AM_INY},
+  {"STX", 0x86, I_STX, AM_ZPG},
+  {"STX", 0x96, I_STX, AM_ZPY},
+  {"STX", 0x8E, I_STX, AM_ABS},
+  {"STY", 0x84, I_STY, AM_ZPG},
+  {"STY", 0x94, I_STY, AM_ZPX},
+  {"STY", 0x8C, I_STY, AM_ABS},
+  {"TAX", 0xAA, I_TAX, AM_IMP},
+  {"TAY", 0xA8, I_TAY, AM_IMP},
+  {"TSX", 0xBA, I_TSX, AM_IMP},
+  {"TXA", 0x8A, I_TXA, AM_IMP},
+  {"TXS", 0x9A, I_TXS, AM_IMP},
+  {"TYA", 0x98, I_TYA, AM_IMP},
+  {0},
 };
 
 typedef struct cpu {
@@ -280,8 +316,8 @@ typedef struct cpu {
   // program counter
   uint16_t pc;
 
-  // helper variable to store current opcode being executed
-  uint8_t op;
+  // helper variable to store current instruction being executed
+  instruction op;
 
   // helper variable to store byte value read
   uint8_t b;
@@ -304,14 +340,24 @@ void cpu_write_state(cpu *cpu, FILE* f) {
 
 void cpu_fetch(cpu *cpu) {
   uint8_t op = cpu_read(cpu->pc);
-  cpu->op = op;
-  cpu->pc++;
+  instruction instr = {0};
+  for (int i = 0; ; i++) {
+    if (instructions[i].instruction == I_INVALID) {
+      break;
+    }
+    if (instructions[i].opcode == op) {
+      instr = instructions[i];
+      break;
+    }
+  }
 
-  instruction instr = instructions[op];
-  if (!instr.fmt) {
+  if (instr.instruction == I_INVALID) {
     fprintf(stderr, "ilegal opcode: %02X\n", op);
     exit(1);
   }
+
+  cpu->op = instr;
+  cpu->pc++;
 
   int8_t d;
 
@@ -322,7 +368,7 @@ void cpu_fetch(cpu *cpu) {
     break;
 
   case AM_IMP:
-    fprintf(stderr, "%s\n", instr.fmt);
+    fprintf(stderr, "%s", instr.fmt);
     break;
 
   // TODO
@@ -341,12 +387,12 @@ void cpu_fetch(cpu *cpu) {
 
   case AM_ZPG:
     cpu->addr = cpu_read(cpu->pc);
-    fprintf(stderr, instr.fmt, cpu->addr);
+    fprintf(stderr, "%s $%02X ;; $%04X", instr.fmt, cpu->b, cpu->addr);
     break;
 
   case AM_IMM:
     cpu->b = cpu_read(cpu->pc);
-    fprintf(stderr, instr.fmt, cpu->b);
+    fprintf(stderr, "%s #%02X", instr.fmt, cpu->b);
     cpu->pc++;
     break;
 
@@ -362,7 +408,7 @@ void cpu_fetch(cpu *cpu) {
     cpu->addr |= ((uint16_t) cpu_read(cpu->pc)) << 8;
     cpu->pc++;
 
-    fprintf(stderr, instr.fmt, cpu->b);
+    fprintf(stderr, "%s $%04X", instr.fmt, cpu->addr);
     break;
   }
 
@@ -442,28 +488,77 @@ void cpu_write_addr_mode(cpu *cpu, addr_mode_t am) {
 }
 
 void cpu_exec(cpu *cpu) {
-  instruction instr = instructions[cpu->op];
+  switch (cpu->op.instruction) {
+  default:
+    TODO;
+    break;
 
-  switch (cpu->op) {
-  case I_LDA_IMM:
-  case I_LDA_ZPG:
-  case I_LDA_ZPX:
-  case I_LDA_ABS:
-  case I_LDA_ABX:
-  case I_LDA_ABY:
-  case I_LDA_INX:
-  case I_LDA_INY:
-    cpu_read_addr_mode(cpu, instr.addr_mode);
+  case I_ADC:
+  case I_AND:
+  case I_ASL:
+  case I_BCC:
+  case I_BCS:
+  case I_BEQ:
+  case I_BIT:
+  case I_BMI:
+  case I_BNE:
+  case I_BPL:
+  case I_BRK:
+  case I_BVC:
+  case I_CLC:
+  case I_CLD:
+  case I_CLI:
+  case I_CLV:
+  case I_CMP:
+  case I_CPX:
+  case I_CPY:
+  case I_DEC:
+  case I_DEX:
+  case I_DEY:
+  case I_EOR:
+  case I_INC:
+  case I_INX:
+  case I_INY:
+  case I_JMP:
+  case I_JSR:
+  case I_LDX:
+  case I_LDY:
+  case I_LSR:
+  case I_NOP:
+  case I_ORA:
+  case I_PHA:
+  case I_PHP:
+  case I_PLA:
+  case I_PLP:
+  case I_ROR:
+  case I_RTI:
+  case I_RTS:
+  case I_SBC:
+  case I_SEC:
+  case I_SED:
+  case I_SEI:
+  case I_STA:
+  case I_STX:
+  case I_STY:
+  case I_TAX:
+  case I_TAY:
+  case I_TSX:
+  case I_TXA:
+  case I_TXS:
+  case I_TYA:
+    TODO;
+    break;
+
+  case I_LDA:
+    cpu_read_addr_mode(cpu, cpu->op.addr_mode);
     cpu->a = cpu->b;
     cpu->p |= cpu->a & F_N;
     break;
 
-  case I_ROL_ZPG:
-  case I_ROL_ABS:
-  case I_ROL_ACC:
-    cpu_read_addr_mode(cpu, instr.addr_mode);
+  case I_ROL:
+    cpu_read_addr_mode(cpu, cpu->op.addr_mode);
     cpu->b = (cpu->b << 1) | (cpu->b >> 7);
-    cpu_write_addr_mode(cpu, instr.addr_mode);
+    cpu_write_addr_mode(cpu, cpu->op.addr_mode);
     break;
   }
 }
@@ -473,7 +568,7 @@ void test_lda() {
   cpu cpu = {0};
   cpu.p = 0x26;
   cpu.pc = 0;
-  ram[0x00] = I_LDA_IMM;
+  ram[0x00] = 0xA9;
   ram[0x01] = 0x85;
   cpu_fetch(&cpu);
   cpu_exec(&cpu);
@@ -486,7 +581,7 @@ void test_rol() {
   cpu cpu = {0};
   cpu.p = 0x26;
   cpu.pc = 0;
-  ram[0x00] = I_ROL_ZPG;
+  ram[0x00] = 0x26;
   ram[0x01] = 0x02;
   ram[0x02] = 0x80;
   cpu_fetch(&cpu);
@@ -498,16 +593,4 @@ void test_rol() {
 int main() {
   test_lda();
   test_rol();
-
-  cpu cpu = {0};
-  cpu.p = 0x26;
-  cpu.pc = 0;
-  ram[0x00] = I_ROL_ZPG;
-  ram[0x01] = 0x02;
-  ram[0x02] = 0x80;
-
-  /* cpu_write_state(&cpu, stderr); */
-  /* cpu_fetch(&cpu); */
-  /* cpu_exec(&cpu); */
-  /* cpu_write_state(&cpu, stderr); */
 }
