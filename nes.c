@@ -69,15 +69,6 @@ typedef enum addr_mode_t {
   AM_LEN,
 } addr_mode_t;
 
-
-
-
-// ASL A
-// b = A (read AM_ACC)
-// b <<= 1
-// set flags
-// A = b
-
 typedef enum instruction_t {
   I_INVALID = 0,
   I_ADC,
