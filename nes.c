@@ -396,6 +396,7 @@ void cpu_fetch(cpu *cpu) {
     d = cpu->b;
     // minus 1 because pc moved to read byte b
     cpu->addr = cpu->pc - 1 + d;
+    fprintf(stderr, "%s $%02X ; $%04X", instr.fmt, cpu->b, cpu->addr);
     break;
 
   case AM_ZPG:
