@@ -52,6 +52,13 @@ uint8_t cpu_read(uint16_t addr) {
   TODO;
 }
 
+uint16_t cpu_read16(uint16_t addr) {
+  uint16_t n = cpu_read(addr);
+  n <<= 8;
+  n |= cpu_read(addr+1);
+  return n;
+}
+
 typedef enum addr_mode_t {
   AM_ACC,
   AM_ABS,
@@ -589,7 +596,9 @@ void cpu_exec(cpu *cpu) {
     break;
 
   case I_BRK:
-    TODO;
+    stack_push16(cpu, cpu->pc);
+    stack_push(cpu, cpu->p);
+    cpu->addr = cpu_read16(0xFFFE);
 
   case I_BVC:
     cpu_read_addr_mode(cpu, cpu->instr.addr_mode);
